@@ -1,4 +1,5 @@
 const express = require("express");
+const app = express();
 const mongo = require("mongodb");
 const mongoose = require("mongoose");
 const validUrl = require("valid-url");
@@ -6,9 +7,6 @@ const dns = require("dns");
 const shortid = require("shortid");
 const cors = require("cors");
 require("dotenv").config();
-
-const app = express();
-const port = process.env.PORT || 3000;
 
 // Body parser
 app.use(express.urlencoded({ extended: true }));
@@ -50,7 +48,7 @@ app.post("/api/shorturl/new", (req, res) => {
     // Validate hostname
     dns.resolve(new URL(originalUrl).hostname, (error, records) => {
       if (error) return res.json({ error: "Invalid Hostname" });
-      // Check if url already exit in the database
+      // Check if url already exist in the database
       Url.findOne({ original_url: originalUrl }, (error, foundUrl) => {
         if (error) return console.log(error);
         if (foundUrl) {
@@ -71,12 +69,14 @@ app.post("/api/shorturl/new", (req, res) => {
 });
 
 // Redirection logic
-app.get("/api/shorturl/:id", (req, res) => {
+app.get("/api/shorturl/:id?", (req, res) => {
   Url.findById(req.params.id, (error, foundUrl) => {
     if (error) return console.log(error);
+    if (!foundUrl) return res.json({ error: "URL not found" });
     res.redirect(301, foundUrl.original_url);
   });
 });
 
 // Server listening
+const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running at port ` + port));
