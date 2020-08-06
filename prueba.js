@@ -3,11 +3,11 @@ const app = express();
 const mongo = require("mongodb");
 const mongoose = require("mongoose");
 const validUrl = require("valid-url");
+const dns = require("dns");
 const shortid = require("shortid");
 const cors = require("cors");
 require("dotenv").config();
 const { Resolver } = require("dns").promises;
-const resolver = new Resolver();
 
 // Body parser
 app.use(express.urlencoded({ extended: true }));
@@ -48,22 +48,20 @@ app.post("/api/shorturl/new", async (req, res) => {
   if (!validUrl.isWebUri(originalUrl))
     return res.json({ error: "Invalid URL" });
 
+  // Validate hostname
   try {
-    // Validate hostname
-    await resolver.resolve(new URL(originalUrl).hostname);
+    await Resolver(new URL(originalUrl).hostname);
     // Check if url already exist in the database
     const findOne = await Url.findOne({ original_url: originalUrl });
-    // if exist return json with short url
-    if (findOne)
-      return res.json({ original_url: originalUrl, short_url: findOne._id });
-    // Else create and save new url to the database
-    const newUrl = await Url.create({ original_url: originalUrl });
-    res.json({ original_url: originalUrl, short_url: newUrl._id });
+
+    if (findOne) {
+      res.json({ original_url: originalUrl, short_url: foundUrl._id });
+    } else {
+      await Url.create({ original_url: originalUrl });
+      res.json({ original_url: originalUrl, short_url: newUrl._id });
+    }
   } catch (err) {
-    // Handle database and host errors
-    err.code = "ENOTFOUND"
-      ? res.json({ error: "Invalid hostname" })
-      : res.json({ error: err.message });
+    console.log(err);
   }
 });
 
