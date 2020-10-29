@@ -2,7 +2,7 @@
 
 ## View project
 
-[URL Shortener Microservice](https://url-shortener-kel.herokuapp.com/)
+[URL Shortener Microservice](https://url-shortener-microservice-kel.glitch.me/)
 
 ## User Stories
 
